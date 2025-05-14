@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>Resume parser.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Resume parser.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">re</span>
+<span class="s0">from </span><span class="s1">pdfminer</span><span class="s2">.</span><span class="s1">high_level </span><span class="s0">import </span><span class="s1">extract_text</span>
+<span class="s0">import </span><span class="s1">spacy</span>
+
+<span class="s3"># Load spaCy English model</span>
+<span class="s1">nlp </span><span class="s2">= </span><span class="s1">spacy</span><span class="s2">.</span><span class="s1">load</span><span class="s2">(</span><span class="s4">'en_core_web_sm'</span><span class="s2">)</span>
+
+<span class="s3"># 1. Extract text from PDF</span>
+<span class="s0">def </span><span class="s1">extract_text_from_pdf</span><span class="s2">(</span><span class="s1">pdf_path</span><span class="s2">):</span>
+    <span class="s1">text </span><span class="s2">= </span><span class="s1">extract_text</span><span class="s2">(</span><span class="s1">pdf_path</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">text</span><span class="s2">.</span><span class="s1">replace</span><span class="s2">(</span><span class="s4">'</span><span class="s0">\n</span><span class="s4">'</span><span class="s2">, </span><span class="s4">' '</span><span class="s2">).</span><span class="s1">replace</span><span class="s2">(</span><span class="s4">'</span><span class="s0">\xa0</span><span class="s4">'</span><span class="s2">, </span><span class="s4">' '</span><span class="s2">).</span><span class="s1">strip</span><span class="s2">()</span>
+
+<span class="s3"># 2. Extract contact number using regex</span>
+<span class="s0">def </span><span class="s1">extract_contact_number_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s1">pattern </span><span class="s2">= </span><span class="s4">r&quot;\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b&quot;</span>
+    <span class="s1">match </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">search</span><span class="s2">(</span><span class="s1">pattern</span><span class="s2">, </span><span class="s1">text</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">match</span><span class="s2">.</span><span class="s1">group</span><span class="s2">() </span><span class="s0">if </span><span class="s1">match </span><span class="s0">else None</span>
+
+<span class="s3"># 3. Extract email using regex</span>
+<span class="s0">def </span><span class="s1">extract_email_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s1">pattern </span><span class="s2">= </span><span class="s4">r&quot;\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b&quot;</span>
+    <span class="s1">match </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">search</span><span class="s2">(</span><span class="s1">pattern</span><span class="s2">, </span><span class="s1">text</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">match</span><span class="s2">.</span><span class="s1">group</span><span class="s2">() </span><span class="s0">if </span><span class="s1">match </span><span class="s0">else None</span>
+
+<span class="s3"># 4. Extract skills based on a predefined list</span>
+<span class="s0">def </span><span class="s1">extract_skills_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">, </span><span class="s1">skills_list</span><span class="s2">):</span>
+    <span class="s1">doc </span><span class="s2">= </span><span class="s1">nlp</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+    <span class="s1">found_skills </span><span class="s2">= []</span>
+
+    <span class="s0">for </span><span class="s1">token </span><span class="s0">in </span><span class="s1">doc</span><span class="s2">:</span>
+        <span class="s0">for </span><span class="s1">skill </span><span class="s0">in </span><span class="s1">skills_list</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">token</span><span class="s2">.</span><span class="s1">text</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">() == </span><span class="s1">skill</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">():</span>
+                <span class="s1">found_skills</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">skill</span><span class="s2">)</span>
+
+    <span class="s0">for </span><span class="s1">skill </span><span class="s0">in </span><span class="s1">skills_list</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">skill</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">() </span><span class="s0">in </span><span class="s1">text</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">() </span><span class="s0">and </span><span class="s1">skill </span><span class="s0">not in </span><span class="s1">found_skills</span><span class="s2">:</span>
+            <span class="s1">found_skills</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">skill</span><span class="s2">)</span>
+
+    <span class="s0">return </span><span class="s1">list</span><span class="s2">(</span><span class="s1">set</span><span class="s2">(</span><span class="s1">found_skills</span><span class="s2">))</span>
+
+<span class="s3"># 5. Extract education info using pattern matching</span>
+<span class="s0">def </span><span class="s1">extract_education_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s1">pattern </span><span class="s2">= </span><span class="s4">r&quot;(Bachelor(?:'s)?|Master(?:'s)?|Ph\.D|B\.Tech|M\.Tech|B\.Sc|M\.Sc|MBA|BCA|MCA).{0,50}?(University|Institute|College|School)[^\n]*&quot;</span>
+    <span class="s1">matches </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">findall</span><span class="s2">(</span><span class="s1">pattern</span><span class="s2">, </span><span class="s1">text</span><span class="s2">, </span><span class="s1">re</span><span class="s2">.</span><span class="s1">IGNORECASE</span><span class="s2">)</span>
+    <span class="s1">education </span><span class="s2">= [</span><span class="s4">' '</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">match</span><span class="s2">) </span><span class="s0">for </span><span class="s1">match </span><span class="s0">in </span><span class="s1">matches</span><span class="s2">]</span>
+    <span class="s0">return </span><span class="s1">education</span>
+
+<span class="s3"># 6. Improved name extraction</span>
+<span class="s0">def </span><span class="s1">extract_name</span><span class="s2">(</span><span class="s1">resume_text</span><span class="s2">):</span>
+    <span class="s1">top_text </span><span class="s2">= </span><span class="s4">' '</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">resume_text</span><span class="s2">.</span><span class="s1">split</span><span class="s2">()[:</span><span class="s5">50</span><span class="s2">])</span>
+    <span class="s1">doc </span><span class="s2">= </span><span class="s1">nlp</span><span class="s2">(</span><span class="s1">top_text</span><span class="s2">)</span>
+
+    <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;NER Results (PERSON):&quot;</span><span class="s2">)</span>
+    <span class="s0">for </span><span class="s1">ent </span><span class="s0">in </span><span class="s1">doc</span><span class="s2">.</span><span class="s1">ents</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s1">ent</span><span class="s2">.</span><span class="s1">text</span><span class="s2">, </span><span class="s4">&quot;-&quot;</span><span class="s2">, </span><span class="s1">ent</span><span class="s2">.</span><span class="s1">label_</span><span class="s2">)</span>
+
+    <span class="s0">for </span><span class="s1">ent </span><span class="s0">in </span><span class="s1">doc</span><span class="s2">.</span><span class="s1">ents</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">ent</span><span class="s2">.</span><span class="s1">label_ </span><span class="s2">== </span><span class="s4">'PERSON' </span><span class="s0">and </span><span class="s1">len</span><span class="s2">(</span><span class="s1">ent</span><span class="s2">.</span><span class="s1">text</span><span class="s2">.</span><span class="s1">split</span><span class="s2">()) &lt;= </span><span class="s5">4</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">ent</span><span class="s2">.</span><span class="s1">text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">()</span>
+
+    <span class="s3"># Handle spaced capital letters like &quot;B A S T I N&quot;</span>
+    <span class="s1">tokens </span><span class="s2">= </span><span class="s1">top_text</span><span class="s2">.</span><span class="s1">split</span><span class="s2">()</span>
+    <span class="s1">name_candidate </span><span class="s2">= []</span>
+    <span class="s0">for </span><span class="s1">token </span><span class="s0">in </span><span class="s1">tokens</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">token</span><span class="s2">) == </span><span class="s5">1 </span><span class="s0">and </span><span class="s1">token</span><span class="s2">.</span><span class="s1">isalpha</span><span class="s2">() </span><span class="s0">and </span><span class="s1">token</span><span class="s2">.</span><span class="s1">isupper</span><span class="s2">():</span>
+            <span class="s1">name_candidate</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">token</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">name_candidate</span><span class="s2">:</span>
+            <span class="s0">break</span>
+    <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">name_candidate</span><span class="s2">) &gt;= </span><span class="s5">2</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s4">''</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">name_candidate</span><span class="s2">)</span>
+
+    <span class="s3"># Fallback to title-case based name</span>
+    <span class="s1">name_parts </span><span class="s2">= </span><span class="s1">top_text</span><span class="s2">.</span><span class="s1">split</span><span class="s2">()[:</span><span class="s5">5</span><span class="s2">]</span>
+    <span class="s1">full_name </span><span class="s2">= </span><span class="s4">&quot; &quot;</span><span class="s2">.</span><span class="s1">join</span><span class="s2">([</span><span class="s1">word </span><span class="s0">for </span><span class="s1">word </span><span class="s0">in </span><span class="s1">name_parts </span><span class="s0">if </span><span class="s1">word</span><span class="s2">.</span><span class="s1">istitle</span><span class="s2">()])</span>
+    <span class="s0">return </span><span class="s1">full_name </span><span class="s0">if </span><span class="s1">full_name </span><span class="s0">else None</span>
+
+<span class="s3"># 7. Optional fallback based on capitalized line (not used in main run)</span>
+<span class="s0">def </span><span class="s1">extract_name_fallback</span><span class="s2">(</span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s1">lines </span><span class="s2">= </span><span class="s1">text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">().</span><span class="s1">split</span><span class="s2">(</span><span class="s4">'</span><span class="s0">\n</span><span class="s4">'</span><span class="s2">)</span>
+    <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">lines</span><span class="s2">:</span>
+        <span class="s1">line </span><span class="s2">= </span><span class="s1">line</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">()</span>
+        <span class="s0">if </span><span class="s1">line </span><span class="s0">and </span><span class="s1">line</span><span class="s2">[</span><span class="s5">0</span><span class="s2">].</span><span class="s1">isupper</span><span class="s2">() </span><span class="s0">and </span><span class="s1">len</span><span class="s2">(</span><span class="s1">line</span><span class="s2">.</span><span class="s1">split</span><span class="s2">()) &lt;= </span><span class="s5">4</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">line</span>
+    <span class="s0">return None</span>
+
+<span class="s3"># 8. Main execution</span>
+<span class="s0">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s4">'__main__'</span><span class="s2">:</span>
+    <span class="s1">resume_paths </span><span class="s2">= [</span><span class="s4">&quot;/Users/rithikp/PythonProject2/.venv/bas.pdf&quot;</span><span class="s2">]</span>
+
+    <span class="s1">skills_list </span><span class="s2">= [</span><span class="s4">'Python'</span><span class="s2">, </span><span class="s4">'Data Analysis'</span><span class="s2">, </span><span class="s4">'Machine Learning'</span><span class="s2">, </span><span class="s4">'Communication'</span><span class="s2">,</span>
+                   <span class="s4">'Project Management'</span><span class="s2">, </span><span class="s4">'Deep Learning'</span><span class="s2">, </span><span class="s4">'SQL'</span><span class="s2">, </span><span class="s4">'Tableau'</span><span class="s2">]</span>
+
+    <span class="s0">for </span><span class="s1">resume_path </span><span class="s0">in </span><span class="s1">resume_paths</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Processing:&quot;</span><span class="s2">, </span><span class="s1">resume_path</span><span class="s2">)</span>
+        <span class="s0">try</span><span class="s2">:</span>
+            <span class="s1">text </span><span class="s2">= </span><span class="s1">extract_text_from_pdf</span><span class="s2">(</span><span class="s1">resume_path</span><span class="s2">)</span>
+
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Extracted Resume Text (Preview):&quot;</span><span class="s2">, </span><span class="s1">text</span><span class="s2">[:</span><span class="s5">300</span><span class="s2">], </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s2">)</span>
+
+            <span class="s1">name </span><span class="s2">= </span><span class="s1">extract_name</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+            <span class="s0">if not </span><span class="s1">name</span><span class="s2">:</span>
+                <span class="s1">name </span><span class="s2">= </span><span class="s1">extract_name_fallback</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Name:&quot;</span><span class="s2">, </span><span class="s1">name </span><span class="s0">if </span><span class="s1">name </span><span class="s0">else </span><span class="s4">&quot;Not found&quot;</span><span class="s2">)</span>
+
+            <span class="s1">phone </span><span class="s2">= </span><span class="s1">extract_contact_number_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Contact Number:&quot;</span><span class="s2">, </span><span class="s1">phone </span><span class="s0">if </span><span class="s1">phone </span><span class="s0">else </span><span class="s4">&quot;Not found&quot;</span><span class="s2">)</span>
+
+            <span class="s1">email </span><span class="s2">= </span><span class="s1">extract_email_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Email:&quot;</span><span class="s2">, </span><span class="s1">email </span><span class="s0">if </span><span class="s1">email </span><span class="s0">else </span><span class="s4">&quot;Not found&quot;</span><span class="s2">)</span>
+
+            <span class="s1">skills </span><span class="s2">= </span><span class="s1">extract_skills_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">, </span><span class="s1">skills_list</span><span class="s2">)</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Skills:&quot;</span><span class="s2">, </span><span class="s1">skills </span><span class="s0">if </span><span class="s1">skills </span><span class="s0">else </span><span class="s4">&quot;None found&quot;</span><span class="s2">)</span>
+
+            <span class="s1">education </span><span class="s2">= </span><span class="s1">extract_education_from_resume</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Education:&quot;</span><span class="s2">, </span><span class="s1">education </span><span class="s0">if </span><span class="s1">education </span><span class="s0">else </span><span class="s4">&quot;None found&quot;</span><span class="s2">)</span>
+
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s4">&quot;=&quot; </span><span class="s2">* </span><span class="s5">60 </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s2">)</span>
+
+        <span class="s0">except </span><span class="s1">FileNotFoundError</span><span class="s2">:</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Error: File not found - </span><span class="s0">{</span><span class="s1">resume_path</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+        <span class="s0">except </span><span class="s1">Exception </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;An error occurred: </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+</pre>
+</body>
+</html>
